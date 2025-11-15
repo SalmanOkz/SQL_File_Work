@@ -170,4 +170,93 @@ from sales.sales_summary s
 	order by
 		model_year,
 		sales
-		
+	
+use Store
+
+select 
+		brand,
+		category,
+		sum(sales) as total_sales
+from sales.sales_summary
+group by 
+ GROUPING sets (
+	(brand,category),
+	(brand),
+	( category),
+	()
+ )
+
+
+
+
+-- grouping set -- cube --roll up these are under grouping
+--a,b = (),(a),(b),(a,b)
+
+select 
+		brand,
+		category,
+		sum(sales) as total_sales
+from sales.sales_summary
+group by 
+ cube(brand,category)
+
+-- Roll Ups --try simple query
+select 
+		brand,
+		category,
+		sum(sales) as total_sales
+from sales.sales_summary
+group by 
+ rollup(brand,category)
+
+
+ select brand,
+		sum(sales) as total_sales
+ from sales.sales_summary
+ group by
+ cube (brand)
+
+
+ -- SUB QUERY
+ select * from sales.customers where state = 'NY';
+
+ select * from sales.orders
+ where customer_id in (
+	select customer_id 
+	from sales.customers 
+			where state = 'NY'
+ );
+
+select * from production.products 
+
+ select product_name,list_price,category_id 
+	from production.products p1 
+		where list_price in (
+				select max(p2.list_price) as max_price
+					from production.products p2 
+						where  p2.category_id = p1.category_id 
+							group by p2.category_id
+ )
+
+ order by category_id, product_name;
+
+ if not exists(
+ select name from sys.databases where name = 'lol'
+ )
+ begin 
+	create database testing
+end
+
+
+select product_name,category_id,list_price 
+	from production.stocks s, production.products p
+	where list_price in 
+	(
+	select max(list_price) from production.products p1 where p1.category_id = p.category_id
+	group by p1.category_id
+	)
+
+	order by product_name,category_id
+
+
+	
