@@ -259,4 +259,5 @@ select product_name,category_id,list_price
 	order by product_name,category_id
 
 
-	
+select   sum(list_price) from production.products as p1
+where p1.product_id = p1.category_id

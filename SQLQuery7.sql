@@ -11,6 +11,8 @@ CREATE TABLE employees (
     hire_date DATE
 );
 
+
+
 INSERT INTO employees (employee_id,first_name, last_name, department, position, salary, hire_date) VALUES
 (1,'John', 'Doe', 'IT', 'Software Engineer', 85000, '2020-03-15'),
 (2,'Jane', 'Smith', 'Finance', 'Accountant', 78000, '2019-06-10'),
@@ -32,6 +34,15 @@ INSERT INTO employees (employee_id,first_name, last_name, department, position, 
 SELECT MAX(salary) AS Max_Salary FROM employees;
 
 
+select * from employees
+
+select position, 
+        sum(salary) as total_salary
+from employees
+group by
+    rollup(position,salary) 
+
+
 SELECT employee_id, first_name, last_name, department, salary
 FROM employees
 ORDER BY salary DESC;
@@ -42,8 +53,8 @@ SELECT employee_id,
        department,
        salary
 FROM employees
-ORDER BY salary DESC
-LIMIT 10;
+ORDER BY salary DESC OFFSET 10 ROWS 
+FETCH NEXT 10 ROWS ONLY;
 
 
 SELECT 
