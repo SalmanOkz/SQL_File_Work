@@ -261,3 +261,129 @@ select product_name,category_id,list_price
 
 select   sum(list_price) from production.products as p1
 where p1.product_id = p1.category_id
+
+
+
+with tables_data
+as (
+select * from sales.customers
+)
+select * from sales.sales_summary
+
+WITH sales_cte AS 
+(
+    SELECT 
+        s.first_name + ' ' + s.last_name AS full_name,
+        YEAR(o.order_date) as order_year,
+		count(it.order_id = o.order_id) as avg_order_by_staff,
+        SUM((it.quantity * it.list_price) * (1 - it.discount)) AS sales
+    FROM sales.staffs s
+    INNER JOIN sales.orders o ON o.staff_id = s.staff_id
+    INNER JOIN sales.order_items it ON it.order_id = o.order_id
+    GROUP BY s.first_name + ' ' + s.last_name, YEAR(o.order_date)
+)
+SELECT full_name, avg(o)
+FROM sales_cte
+WHERE order_year = 2018
+ORDER BY sales DESC;
+
+
+
+
+select so.staff_id,
+	count(*) order_count
+from
+sales.orders so
+where year()
+
+WITH cte_category_counts (
+    category_id, 
+    category_name, 
+    product_count
+)
+AS (
+    SELECT 
+        c.category_id, 
+        c.category_name, 
+        COUNT(p.product_id)
+    FROM 
+        production.products p
+        INNER JOIN production.categories c 
+            ON c.category_id = p.category_id
+    GROUP BY 
+        c.category_id, 
+        c.category_name
+),
+cte_category_sales(category_id, sales) AS (
+    SELECT    
+        p.category_id, 
+        SUM(i.quantity * i.list_price * (1 - i.discount))
+    FROM    
+        sales.order_items i
+        INNER JOIN production.products p 
+            ON p.product_id = i.product_id
+        INNER JOIN sales.orders o 
+            ON o.order_id = i.order_id
+    WHERE order_status = 4 -- completed
+    GROUP BY 
+        p.category_id
+) 
+
+SELECT 
+    c.category_id, 
+    c.category_name, 
+    c.product_count, 
+    s.sales
+FROM
+    cte_category_counts c
+    INNER JOIN cte_category_sales s 
+        ON s.category_id = c.category_id
+ORDER BY 
+    c.category_name;
+
+
+
+SELECT 
+    category_name, 
+    COUNT(product_id) product_count
+FROM 
+    production.products p
+    INNER JOIN production.categories c 
+        ON c.category_id = p.category_id
+GROUP BY 
+    category_name;
+
+
+
+-- pivot 
+-- select form table 
+-- PIVOT fuction
+-- aggrigate function
+-- for (list) in (column) as pivot 
+
+
+SELECT * FROM   
+(
+    SELECT 
+        category_name, -- pivot col
+        product_id,-- agg col
+		model_year -- grouping col
+    FROM 
+        production.products p
+        INNER JOIN production.categories c 
+            ON c.category_id = p.category_id
+) t 
+PIVOT(
+    COUNT(product_id) 
+    FOR category_name IN (
+        [Children Bicycles], 
+        [Comfort Bicycles], 
+        [Cruisers Bicycles], 
+        [Cyclocross Bicycles], 
+        [Electric Bikes], 
+        [Mountain Bikes], 
+        [Road Bikes])
+) AS pivot_table;
+
+
+

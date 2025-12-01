@@ -51,7 +51,7 @@ SELECT employee_id,
        first_name,
        last_name,
        department,
-       salary
+       salaryx
 FROM employees
 ORDER BY salary DESC OFFSET 10 ROWS 
 FETCH NEXT 10 ROWS ONLY;
