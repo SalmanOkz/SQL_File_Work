@@ -187,3 +187,124 @@ SELECT * FROM DimDate;
 SELECT * FROM DimProduct;
 SELECT * FROM DimStore;
 SELECT * FROM FactInventory;
+
+
+
+use Store
+
+
+create table my_table(
+my_id int primary key IDENTITY,
+my_name varchar(20),
+)
+
+
+-- FOREIGN KEY(maintain integrity) refrecial integrity between table
+create schema procurement
+CREATE TABLE procurement.vendor_groups (
+    group_id INT IDENTITY PRIMARY KEY,
+    group_name VARCHAR (100) NOT NULL
+);
+
+CREATE TABLE procurement.vendors (
+        vendor_id INT IDENTITY PRIMARY KEY,
+        vendor_name VARCHAR(100) NOT NULL,
+        group_id INT NOT NULL,
+);
+
+DROP TABLE procurement.vendors;
+
+CREATE TABLE procurement.vendors (
+        vendor_id INT IDENTITY PRIMARY KEY,
+        vendor_name VARCHAR(100) NOT NULL,
+        group_id INT NOT NULL,
+        CONSTRAINT fk_group FOREIGN KEY (group_id) 
+        REFERENCES procurement.vendor_groups(group_id)
+        on update cascade
+        on delete no action
+);
+
+INSERT INTO procurement.vendor_groups(group_name)
+VALUES('Third-Party Vendors'),
+      ('Interco Vendors'),
+      ('One-time Vendors');
+
+
+INSERT INTO procurement.vendors(vendor_name, group_id)
+VALUES('ABC Corp',1);
+
+INSERT INTO procurement.vendors(vendor_name, group_id)
+VALUES('XYZ Corp',1);
+
+-- 1. First insert into parent table (vendor_groups)
+INSERT INTO procurement.vendor_groups (group_name)
+VALUES 
+    ('IT Suppliers'),
+    ('Office Supplies'),
+    ('Construction Materials'),
+    ('Food Services'),
+    ('Cleaning Supplies');
+GO
+
+-- Check what was inserted (for reference)
+SELECT * FROM procurement.vendor_groups;
+
+
+-- 2. Now insert into child table (vendors) with valid group_id values
+INSERT INTO procurement.vendors (vendor_name, group_id)
+VALUES 
+    -- IT Suppliers (group_id = 1)
+    ('Dell Technologies', 1),
+    ('Microsoft Corporation', 1),
+    ('HP Inc.', 1),
+    ('Cisco Systems', 1),
+    
+    -- Office Supplies (group_id = 2)
+    ('Staples Inc.', 2),
+    ('Office Depot', 2),
+    ('3M Company', 2),
+    
+    -- Construction Materials (group_id = 3)
+    ('Home Depot', 3),
+    ('Lowe''s Companies', 3),
+    ('Sherwin-Williams', 3),
+    
+    -- Food Services (group_id = 4)
+    ('Sysco Corporation', 4),
+    ('US Foods', 4),
+    ('Gordon Food Service', 4),
+    
+    -- Cleaning Supplies (group_id = 5)
+    ('Ecolab Inc.', 5),
+    ('Procter & Gamble', 5),
+    ('Clorox Company', 5);
+GO
+
+-- Verify the data
+SELECT * FROM procurement.vendors;
+
+-- This will FAIL because group_id 99 doesn't exist in vendor_groups
+INSERT INTO procurement.vendors (vendor_name, group_id)
+VALUES ('Test Vendor', 99);
+
+-- Unique
+CREATE TABLE inventory (
+    product_id INT,
+    warehouse_id INT,
+    location_code VARCHAR(10),
+    quantity INT,
+    CONSTRAINT UQ_Product_Location 
+    UNIQUE (product_id, warehouse_id, location_code)
+);
+
+-- Valid inserts:
+INSERT INTO inventory VALUES (101, 1, 'A1', 50);  -- OK
+INSERT INTO inventory VALUES (101, 1, 'A2', 30);  -- OK (different location)
+INSERT INTO inventory VALUES (101, 2, 'A1', 20);  -- OK (different warehouse)
+
+-- This will FAIL (duplicate combination):
+INSERT INTO inventory VALUES (101, 1, 'A1', 10);  -- Error: violates unique constraint
+
+
+
+alter inventory
