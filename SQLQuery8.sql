@@ -305,6 +305,124 @@ INSERT INTO inventory VALUES (101, 2, 'A1', 20);  -- OK (different warehouse)
 -- This will FAIL (duplicate combination):
 INSERT INTO inventory VALUES (101, 1, 'A1', 10);  -- Error: violates unique constraint
 
+select * from [sales].[orders]
+
+select 
+    case order_status
+    when 1 then 'pending'
+    when 2 then 'processing'
+    when 3 then 'rejected'
+    when 4 then 'completed'
+    end as modified_order_status,
+    count(*) as or_status_count
+
+from [sales].[orders]
+group by 
+    case order_status
+    when 1 then 'pending'
+    when 2 then 'processing'
+    when 3 then 'rejected'
+    when 4 then 'completed'
+    end;
+
+SELECT    
+    o.order_id, 
+    SUM(quantity * list_price) order_value,
+    case 
+        when sum(quantity * list_price) <=  500  then 'very low'
+        when sum(quantity * list_price) > 500 and sum(quantity * list_price)  <= 1000 then 'low'
+        when sum(quantity * list_price) > 1000 and sum(quantity * list_price) <= 5000 then 'medium'
+        when sum(quantity * list_price) > 5000 and sum(quantity * list_price) <= 10000 then 'high'
+        when sum(quantity * list_price) > 10000 then 'very high'
+        end as order_priority
+
+from sales.orders as o
+join sales.order_items as oi
+on o.order_id = oi.order_id
+where year(order_date) = 2018
+group by o.order_id
 
 
-alter inventory
+
+-- coalesce
+
+select coalesce('Hi',Null) -- it will not add null if value is givin
+
+--phone --> NULL ('N/A')
+
+select coalesce(phone,'N/A') from sales.customers
+
+
+-- null-if
+-- lhs != rhs (lhs)
+-- lhs == rhs (null)
+select nullif(10,11)
+SELECT 
+    NULLIF('Hello', 'Hi') result;
+
+DROP TABLE IF EXISTS t1;
+CREATE TABLE t1 (
+    id INT IDENTITY(1, 1), 
+    a  INT, 
+    b  INT, 
+    PRIMARY KEY(id)
+);
+
+INSERT INTO
+    t1(a,b)
+VALUES
+    (1,1),
+    (1,2),
+    (1,3),
+    (2,1),
+    (1,2),
+    (1,3),
+    (2,1),
+    (2,2);
+
+
+
+-- handle duplicate
+-- we will get non duplicate if we want duplicate then we will have > 1
+select a,b, 
+    count(*) as records_count 
+        from t1 group by a,b 
+    having count(*) < 2
+
+select * from t1
+
+-- First, SELECT to see what WOULD be deleted
+with cte_duplocate as (
+select *, ROW_NUMBER() over(
+    partition by a,b
+    order by a,b
+
+) as rn 
+from t1
+)
+select id,a,b from cte_duplocate
+where rn > 1
+
+
+
+
+create view production.product_catalog as 
+select category_name,product_name,model_year,list_price,quantity from production.brands b
+join production.categories c on b.brand_id = c.category_id
+join production.products p on p.product_id = b.brand_id
+join production.stocks s on s.store_id = p.product_id
+
+
+seleCt * FROM [production].[product_catalog]
+
+-- listing the view
+
+select * from sys.views
+select * from sys.objects where type = 'v' -- oth quries are doing same thing
+
+-- get ddl
+select * from sys.sql_modules
+
+drop view [production].[product_catalog]
+
+
