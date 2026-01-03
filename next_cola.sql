@@ -103,4 +103,4 @@ ORDER BY so.OrderID, p.Name;
 -- Q6. Find all shipments with details of warehouse, manager, and products shipped.
 -- Display:ShipmentID, WarehouseName, ManagerName, ProductName, QuantityShipped, and TrackingNumber.
 
-
+    
