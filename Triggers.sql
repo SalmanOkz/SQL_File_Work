@@ -221,3 +221,184 @@ SELECT
 FROM 
 	production.brand_approvals;
 
+
+-- Trigger
+-- After(insert, update, delete)
+-- Inserted
+
+CREATE TABLE index_logs (
+    log_id INT IDENTITY PRIMARY KEY,
+    event_data XML NOT NULL,
+    changed_by SYSNAME NOT NULL
+);
+GO
+
+select * from index_logs;
+
+CREATE TRIGGER trg_index_changes
+ON DATABASE
+FOR	
+    CREATE_INDEX,
+    ALTER_INDEX, 
+    DROP_INDEX
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO index_logs (
+        event_data,
+        changed_by
+    )
+    VALUES (
+        EVENTDATA(),
+        USER
+    );
+END;
+GO
+
+
+CREATE NONCLUSTERED INDEX nidx_fname
+ON sales.customers(first_name);
+GO
+
+CREATE NONCLUSTERED INDEX nidx_lname
+ON sales.customers(last_name);
+GO
+
+
+CREATE TABLE view_index_logs (
+    log_id INT IDENTITY PRIMARY KEY,
+    event_data XML NOT NULL,
+    changed_by SYSNAME NOT NULL
+);
+GO
+
+select * from view_index_logs;
+
+
+
+CREATE TRIGGER trg_view_index_changes
+ON DATABASE
+FOR	
+    CREATE_VIEW,
+    ALTER_VIEW, 
+    DROP_VIEW
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO view_index_logs (
+        event_data,
+        changed_by
+    )
+    VALUES (
+        EVENTDATA(),
+        USER
+    );
+END;
+GO
+
+drop view categories
+
+CREATE VIEW categories AS
+SELECT
+    *
+FROM [production].[categories];
+
+disable trigger trg_view_index_changes
+on database;
+
+enable trigger trg_view_index_changes
+on database;
+
+SELECT 
+    definition   
+FROM 
+    sys.sql_modules  
+WHERE 
+    object_id = OBJECT_ID('[production].[trg_product_audit]'); 
+
+select * from sys.triggers;
+
+
+drop trigger [production].[trg_product_audit]
+
+-- Functions in sql
+
+CREATE FUNCTION sales.udfNetSale(
+    @quantity INT,
+    @list_price DEC(10,2),
+    @discount DEC(4,2)
+)
+RETURNS DEC(10,2)
+AS 
+BEGIN
+    RETURN @quantity * @list_price * (1 - @discount);
+END;
+
+
+select sales.udfNetSale (2,10.5,0.25) as net_price
+
+create function sales.avg_price_product
+(
+    @quantity dec(10,2),
+    @production_price int
+)
+returns dec(10,2)
+as begin
+    return @production_price / @quantity ;
+
+    end
+
+select sales.avg_price_product(5.5,5) as avg_price
+
+
+CREATE FUNCTION udfProductInYear (
+    @model_year INT
+)
+RETURNS TABLE
+AS
+RETURN
+    SELECT 
+        product_name,
+        model_year,
+        list_price
+    FROM
+        production.products
+    WHERE
+        model_year = @model_year;
+
+SELECT 
+    * 
+FROM 
+    udfProductInYear(2017);
+
+
+-- these are simple variables
+
+DECLARE @product_table TABLE (
+    product_name VARCHAR(MAX) NOT NULL,
+    brand_id INT NOT NULL,
+    list_price DEC(11,2) NOT NULL
+);
+
+
+INSERT INTO @product_table
+SELECT
+    product_name,
+    brand_id,
+    list_price
+FROM
+    production.products
+WHERE
+    category_id = 1;
+
+
+    SELECT
+    *
+FROM
+    @product_table;
+
+
+drop function avg_price_product
+
